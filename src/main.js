@@ -4,10 +4,16 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
 const form = document.querySelector('.form');
+const loadButton = document.querySelector('.load-more-button');
 
 form.addEventListener('submit', handleSubmit);
+loadButton.addEventListener('click', onLoadMore);
 
-function handleSubmit(event) {
+let page = 1;
+let totalHits = 0;
+let actualQuery = '';
+
+async function handleSubmit(event) {
     event.preventDefault();
 
     const imageQuery = event.target.elements['search-text'].value.trim();
@@ -21,11 +27,16 @@ function handleSubmit(event) {
      return;
     }
 
-showLoader();
-clearGallery();
+    page = 1;
+    actualQuery = imageQuery;
+    showLoader();
+    clearGallery();
+    hideLoadMoreButton();
 
-getImagesByQuery(imageQuery)
-    .then(images => {
+    try{
+        const images = await getImagesByQuery(imageQuery, page)
+        totalHits = images.totalHits;
+
         if(images.length === 0) {
             iziToast.error({
                 message: 'Sorry, there are no images matching your search query. Please try again!',
@@ -36,16 +47,58 @@ getImagesByQuery(imageQuery)
             createGallery(images);
         }
 
-    })
-    .catch(error => {
+        if(totalHits > page * 15) {
+            showLoadMoreButton();
+        } else {
+            hideLoadMoreButton();
+        }
+    } catch(error) {
         iziToast.error({
             message: 'Cannot fetch images',
             position: 'topRight',
             maxWidth: '450px',
-        })
-    })
-    .finally(() => {
+        });
+    } finally {
         hideLoader();
         form.reset();
-    });
+    }
+}
+
+async function onLoadMore() {
+    page += 1;
+    showLoader();
+    hideLoadMoreButton();
+
+    try{
+        const images = await getImagesByQuery(actualQuery, page);
+            createGallery(images);
+            const imageCard = document.querySelector('.gallery .gallery-item');
+
+            if(imageCard) {
+                const imageCardHeight = imageCard.getBoundingClientRect().height;
+                window.scrollBy({
+                        top: imageCardHeight * 2,
+                        behavior: 'smooth',
+                    });
+            }
+
+            if(page * 15 >= totalHits) {
+                hideLoadMoreButton();
+                iziToast.error({
+                    message: 'We are sorry, but you have reached the end of search results.',
+                    position: 'topRight',
+                    maxWidth: '450px',
+                });
+            } else {
+                showLoadMoreButton();
+            }
+        } catch(error){
+            iziToast.error({
+                message: 'Cannot fetch images',
+                position: 'topRight',
+                maxWidth: '450px',
+            });
+        } finally{
+            hideLoader();
+        }
 }
