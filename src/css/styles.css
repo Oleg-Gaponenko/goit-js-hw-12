@@ -147,19 +147,6 @@
   display: none;
 }
 
-.sl-image {
-  width: 70vw !important;
-  height: auto !important;
-  object-fit: contain !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
-.sl-caption {
-  width: 100% !important;
-}
-
 .load-more-button {
-  margin: 0 auto;
+  margin: 16px auto;
 }

@@ -15,7 +15,7 @@ async function getImagesByQuery(query, page = 1) {
                 safesearch: true,
             },
         });
-        return response.data.hits;
+        return response.data;
     } catch(error) {
         console.log(error);
         throw error;
